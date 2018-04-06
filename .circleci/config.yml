@@ -1,0 +1,81 @@
+version: 2
+jobs:
+  test:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run eslint
+      - run: npm run stylelint
+      - run: npm run build
+      - run: npm run build-storybook
+      - run: npm run test:jsdom -- --coverage
+      - run: npx codecov
+      - run: npm run test:server -- --coverage
+      - run: npx codecov
+      - run:
+          name: serve
+          command: node server
+          background: true
+      - run: sleep 3
+      - run: npm run monitors
+
+  monitor-production:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run: npm install # TODO: make this fast
+      - run: CI_REFERENCE_APP_DOMAIN=https://ci-ref-app.herokuapp.com npm run monitors -- --plugin tests/monitor-plugin.js
+
+  monitor-staging:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run: npm install # TODO: make this fast
+      - run: CI_REFERENCE_APP_DOMAIN=https://ci-ref-app-staging.herokuapp.com npm run monitors -- --plugin tests/monitor-plugin.js
+
+  publish-storybook:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run: npm install
+      - run: npm run build-storybook
+      - run: cp -R .circleci storybook-static/
+      - run: npx storybook-to-ghpages --existing-output-dir=storybook-static
+workflows:
+  version: 2
+  commit: # this workflow runs on every commit
+    jobs:
+      - test:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+      - publish-storybook:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
+  
+  monitor:
+    triggers:
+      - schedule:
+          # TODO: when actually in production, run in every minute
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - monitor-production
+      - monitor-staging
