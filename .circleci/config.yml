@@ -1,6 +1,7 @@
 version: 2
 jobs:
   test:
+    working_directory
     docker:
       - image: circleci/node:8
     steps:
@@ -8,11 +9,16 @@ jobs:
       - run: npm install
       - run: npm run eslint
       - run: npm run stylelint
-      - run: npm run test:jsdom
+      - run: npm run build
+      - run: npm run build-storybook
   publish-storybook:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
       - checkout
       - run: npm install
-      - run: npx storybook-to-ghpages
+      - run: npm run build-storybook
 workflows:
   version: 2
   commit: # this workflow runs on every commit
