@@ -28,16 +28,16 @@ jobs:
 workflows:
   version: 2
   commit: # this workflow runs on every commit
-  jobs:
-    - test:
-      filters:
-        branches:
-          ignore:
-            - gh-pages
-    - publish-storybook:
-        requires:
-          - test
-        filters:
-          branches:
-            only:
-              - master
+    jobs:
+      - test:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
+      - publish-storybook:
+          requires:
+            - test
+          filters:
+            branches:
+              only:
+                - master
