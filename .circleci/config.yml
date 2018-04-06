@@ -21,7 +21,7 @@ jobs:
       - checkout
       - run: npm install
       - run: npm run build-storybook
-      - run: -R .circleci storybook-static/
+      - run: cp -R .circleci storybook-static/
       - run: npx storybook-to-ghpages --existing-output-dir=storybook-static
 workflows:
   version: 2
