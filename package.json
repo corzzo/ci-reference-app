@@ -1,7 +1,7 @@
 {
   "name": "ci-reference-app",
   "version": "1.0.0",
-  "description": "A referenee app for my CI workshop.",
+  "description": "A referenee app for my CI workshop",
   "scripts": {
     "start": "WEBPACK_DEV_SERVER=1 node server",
     "storybook": "start-storybook -p 3222",
