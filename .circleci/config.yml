@@ -29,11 +29,11 @@ workflows:
   version: 2
   commit: # this workflow runs on every commit
     jobs:
-      - test:
-        filters:
-          branches:
-            ignore:
-              - gh-pages
+       - test:
+          filters:
+            branches:
+              ignore:
+                - gh-pages
       - publish-storybook:
           requires:
             - test
