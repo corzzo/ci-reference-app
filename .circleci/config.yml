@@ -3,7 +3,7 @@ jobs:
   test:
     working_directory: ~/code
     docker:
-      - image: circleci/node:8
+      - image: circleci/node:8-browsers
     steps:
       - checkout
       - run: npm install
@@ -15,6 +15,31 @@ jobs:
       - run: npx codecov
       - run: npm run test:server -- --coverage
       - run: npx codecov
+      - run:
+          name: serve
+          command: node server
+          background: true
+      - run: sleep 3
+      - run: npm run monitors
+
+  monitor-production:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run: npm install # TODO: make this fast
+      - run: CI_REFERENCE_APP_DOMAIN=https://ci-ref-app.herokuapp.com npm run monitors -- --plugin tests/monitor-plugin.js
+
+  monitor-staging:
+    working_directory: ~/code
+    docker:
+      - image: circleci/node:8-browsers
+    steps:
+      - checkout
+      - run: npm install # TODO: make this fast
+      - run: CI_REFERENCE_APP_DOMAIN=https://ci-ref-app-staging.herokuapp.com npm run monitors -- --plugin tests/monitor-plugin.js
+
   publish-storybook:
     working_directory: ~/code
     docker:
@@ -41,3 +66,16 @@ workflows:
             branches:
               only:
                 - master
+  
+  monitor:
+    triggers:
+      - schedule:
+          # TODO: when actually in production, run in every minute
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - monitor-production
+      - monitor-staging
